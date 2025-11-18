@@ -38,7 +38,7 @@
       resize: vertical;
       box-sizing: border-box;
     }
-    input[type="text"] {
+    input[type="text"], select {
       padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid #374151;
@@ -47,6 +47,8 @@
       font-family: "JetBrains Mono", monospace;
       font-size: 13px;
       box-sizing: border-box;
+    }
+    input[type="text"] {
       width: 200px;
     }
     .row {
@@ -122,8 +124,21 @@ buf += b"\xfc\x48\x83\xe4..."
 
     <label for="outputShellcode">Encoded shellcode (same format)</label>
     <textarea id="outputShellcode" spellcheck="false" placeholder="Result will appear here..." readonly></textarea>
+
+    <label for="decoderSelect">Decoder</label>
+    <div class="row">
+      <select id="decoderSelect">
+        <option value="">— Choose language —</option>
+      </select>
+    </div>
+
+    <label for="decoderCode">Code du décodeur sélectionné</label>
+    <textarea id="decoderCode" spellcheck="false" placeholder="The decoder code will appear here..." readonly></textarea>
   </div>
 
+  <script src="data.js"></script>
+
+  <!-- Puis le script principal qui utilise `decoders` -->
   <script>
     function parseKey(keyStr) {
       keyStr = keyStr.trim();
@@ -182,6 +197,18 @@ buf += b"\xfc\x48\x83\xe4..."
       });
     }
 
+    // Remplir dynamiquement la liste des décodeurs depuis `decoders` (data.js)
+    function populateDecoderSelect() {
+      const select = document.getElementById("decoderSelect");
+      // on laisse la première option "— Choisir —"
+      Object.entries(decoders).forEach(([key, value]) => {
+        const opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = value.label || key;
+        select.appendChild(opt);
+      });
+    }
+
     document.getElementById("encodeBtn").addEventListener("click", () => {
       const input = document.getElementById("inputShellcode").value;
       const keyStr = document.getElementById("key").value;
@@ -199,6 +226,22 @@ buf += b"\xfc\x48\x83\xe4..."
         errorEl.textContent = e.message;
       }
     });
+
+    // Gestion du select de décodeur
+    document.getElementById("decoderSelect").addEventListener("change", (e) => {
+      const id = e.target.value;
+      const decoderTextArea = document.getElementById("decoderCode");
+
+      if (!id || !decoders[id]) {
+        decoderTextArea.value = "";
+        return;
+      }
+
+      decoderTextArea.value = decoders[id].content;
+    });
+
+    // Remplir le select au chargement de la page
+    window.addEventListener("DOMContentLoaded", populateDecoderSelect);
   </script>
 </body>
 </html>
